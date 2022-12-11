@@ -1,4 +1,14 @@
+from PIL import Image
 from keras.models import load_model
+from numpy import asarray
+from numpy import expand_dims
+from os import listdir
+from numpy import round
+from numpy import where
+from numpy import sum
+from numpy import amax
+import pickle
+import numpy as np
 import cv2
 
 from tkinter import *
@@ -6,10 +16,10 @@ from tkinter import messagebox
 import os
 os.system('cls')
 
-#######################################################################################################################
+#########################################################################################################################
 HaarCascade = cv2.CascadeClassifier(cv2.samples.findFile(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'))
 MyFaceNet = load_model('D:\\College\\Semester 8\\Coding\\Models\\FaceNet\\facenet_keras.h5')
-#######################################################################################################################
+#########################################################################################################################
 
 # Functions
 # def pose3():
@@ -24,14 +34,41 @@ def pose1():
     messagebox.showinfo("Detail Pose Pertama", "Deskripsi Pose")
     
     cap = cv2.VideoCapture(1)
+    savePath = ''
     
     while 1:
-        _, img = cap.read()
+        _, imgVideo = cap.read()
         
+        FaceDetect = HaarCascade.detectMultiScale(imgVideo, 1.3, 5)
+        if len(FaceDetect) > 0:
+            x1, y1, w, h = FaceDetect[0]
+        else :
+            x1, y1, w, h = 1,1,10,10
+            
+        x1, y1 = abs(x1), abs(y1)
+        x2, y2 = x1+w, y1+h
         
+        # img = cv2.cvtColor(imgVideo, cv2.COLOR_BGR2RGB)
+        # img = Image.fromarray(img)
+        # img_array = asarray(img)
         
+        # face = img_array[y1:y2, x1:x2]
         
-        cv2.imshow('res', img)
+        # face = Image.fromarray(face)
+        # face = face.resize((160,160))
+        # face = asarray(face)
+        
+        # # face = face.astype('float32')
+        # # mean, std = face.mean(), face.std()
+        # # face = (face - mean) / std
+        
+        # # face = expand_dims(face, axis=0)
+        # signature = MyFaceNet.predict(face)
+        
+        cv2.rectangle(imgVideo, (x1,y1), (x2,y2), (0,255,0), 2)
+        
+        cv2.imshow('res', imgVideo)
+        cv2.imwrite(savePath, imgVideo)
         k = cv2.waitKey(5) & 0xFF
         if k == 27:
             break
