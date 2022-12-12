@@ -14,6 +14,8 @@ import cv2
 import pickle
 import numpy as np
 import cv2
+import json
+import shutil
 
 from tkinter import *
 from tkinter import messagebox
@@ -27,24 +29,31 @@ savePath = "D:\\College\\Semester 8\\Dataset\\Dataset\\"
 if not exists(savePath):
     mkdir(savePath)
 
-signature_path = "D:\\College\\Semester 8\\Coding\\Data"
-if len(listdir(signature_path)) > 0:
+signature_path = "D:\\College\\Semester 8\\Coding\\Data\\signature.pkl"
+if exists(signature_path):
     mySignature = open("D:\\College\\Semester 8\\Coding\\Data\\signature.pkl", "rb")
     faceDatabase = pickle.load(mySignature)
     mySignature.close()
 else:
     faceDatabase = {}
+    
+mahasiswa_path = "D:\\College\\Semester 8\\Coding\\Data\\mahasiswa.json"
+if not exists(mahasiswa_path):
+    data = {"mahasiswa":[{"nobp": "nobp", "nama": "nama", "password": "password"}]}
+    with open(mahasiswa_path, "w") as mahasiswa:
+        json.dump(data, mahasiswa, indent=4)
+        print("File mahasiswa.json is creasted")
 #########################################################################################################################
 
 # Functions
 def pose(nobp, nama, password):
-    training.destroy()
-    print(f"Nobp : {nobp} | Nama : {nama} | Password : {password}")
+    # print(f"Nobp : {nobp} | Nama : {nama} | Password : {password}")
     cap = cv2.VideoCapture(1)
     label = nobp + "\\"
     labelPath = savePath + label
     print(labelPath)
     if not exists(labelPath):
+        training.destroy()
         mkdir(labelPath)
         for i in range(3):
             desc = "front" if i==0 else "side" if i==1 else "glass"
@@ -100,10 +109,19 @@ def pose(nobp, nama, password):
         pickle.dump(faceDatabase, mySignature)
         mySignature.close()
         
+        with open(mahasiswa_path, "r") as file:
+            data = json.load(file)
+            temp = data["mahasiswa"]
+            y = {"nobp": nobp, "nama": nama, "password": password}
+            temp.append(y)
+            with open(mahasiswa_path, "w") as value:
+                json.dump(data, value, indent=4)
+                print(f"Saving ==> Nobp: {nobp} | Nama: {nama} | Password: {password}")
+            
         messagebox.showinfo("Smart Attendance", "Data Wajah Berhasil Direkam")
     else:
+        print("Label sudah ada")
         messagebox.showerror("Smart Attendance", "Label sudah ada.")
-
     cap.release()
 
 #######################################################################################################################
