@@ -1,49 +1,133 @@
+from PIL import Image
+from PIL.Image import fromarray
 from keras.models import load_model
+from numpy import asarray
+from numpy import expand_dims
+from numpy import round
+from numpy import where
+from numpy import sum
+from numpy import amax
+from numpy import savez_compressed
+from os import listdir, mkdir
+from os.path import isdir, exists
 import cv2
+import pickle
+import numpy as np
+import cv2
+import json
+import shutil
 
 from tkinter import *
 from tkinter import messagebox
 import os
 os.system('cls')
 
-#######################################################################################################################
+#########################################################################################################################
+MyFaceNet = load_model("D:\\College\\Semester 8\\Coding\\Models\\FaceNet\\facenet_keras.h5")
 HaarCascade = cv2.CascadeClassifier(cv2.samples.findFile(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'))
-MyFaceNet = load_model('D:\\College\\Semester 8\\Coding\\Models\\FaceNet\\facenet_keras.h5')
-#######################################################################################################################
+savePath = "D:\\College\\Semester 8\\Dataset\\Dataset\\"
+if not exists(savePath):
+    mkdir(savePath)
+
+signature_path = "D:\\College\\Semester 8\\Coding\\Data\\signature.pkl"
+if exists(signature_path):
+    mySignature = open("D:\\College\\Semester 8\\Coding\\Data\\signature.pkl", "rb")
+    faceDatabase = pickle.load(mySignature)
+    mySignature.close()
+else:
+    faceDatabase = {}
+    
+mahasiswa_path = "D:\\College\\Semester 8\\Coding\\Data\\mahasiswa.json"
+if not exists(mahasiswa_path):
+    data = {"mahasiswa":[{"nobp": "nobp", "nama": "nama", "password": "password"}]}
+    with open(mahasiswa_path, "w") as mahasiswa:
+        json.dump(data, mahasiswa, indent=4)
+        print("File mahasiswa.json is creasted")
+#########################################################################################################################
 
 # Functions
-# def pose3():
-#     messagebox.showinfo("Detail Pose Ketiga", "Deskripsi Pose")
-#     messagebox.showinfo("Status", "Data wajah berhasil direkam.\nSekarang anda dapat melakukan absensi.")
-    
-# def pose2():
-#     messagebox.showinfo("Detail Pose Kedua", "Deskripsi Pose")
-#     pose3()
-    
-def pose1():
-    messagebox.showinfo("Detail Pose Pertama", "Deskripsi Pose")
-    
+def pose(nobp, nama, password):
+    # print(f"Nobp : {nobp} | Nama : {nama} | Password : {password}")
     cap = cv2.VideoCapture(1)
-    
-    while 1:
-        _, img = cap.read()
+    label = nobp + "\\"
+    labelPath = savePath + label
+    print(labelPath)
+    if not exists(labelPath):
+        training.destroy()
+        mkdir(labelPath)
+        for i in range(3):
+            desc = "front" if i==0 else "side" if i==1 else "glass"
+            messagebox.showinfo(f"Pose {i}", f"Deskripsi Pose {desc}")
+            sum = 0
+            while 1:
+                key = cv2.waitKey(5) & 0xFF
+                _, imgVideo = cap.read()
+                FaceDetect = HaarCascade.detectMultiScale(imgVideo, 1.3, 5)
+                if len(FaceDetect) > 0:
+                    x1, y1, w, h = FaceDetect[0]
+                else :
+                    x1, y1, w, h = 1,1,10,10
+                x1, y1 = abs(x1), abs(y1)
+                x2, y2 = x1+w, y1+h
+                img = cv2.cvtColor(imgVideo, cv2.COLOR_BGR2RGB)
+                img = fromarray(img)
+                img_array = asarray(img)
+                face = img_array[y1:y2, x1:x2]
+                face = fromarray(face)
+                face_save = face.resize((160,160))
+                face = asarray(face_save)
+                if key == 13:
+                    fileName = labelPath + nama + "_" + desc + "_" + str(sum) + ".jpg"
+                    print(f"saving : {fileName}")
+                    face_save.save(fileName)
+                    sum+=1
+                cv2.rectangle(imgVideo, (x1,y1), (x2,y2), (0,255,0), 2)
+                cv2.imshow('Rekam Wajah', imgVideo)
+                if sum == 10:
+                    break
+                if key == 27:
+                    break
+            cv2.destroyAllWindows()
         
+        for files in listdir(labelPath):
+            file = labelPath + files
+            face_raw = cv2.imread(file)
+            face = cv2.cvtColor(face_raw, cv2.COLOR_BGR2RGB)
+            face = fromarray(face)
+            face = face.resize((160,160))
+            face = asarray(face)
+            face = face.astype('float32')
+            mean, std = face.mean(), face.std()
+            face = (face - mean) / std
+
+            face = expand_dims(face, axis=0)
+            print(f"Training file : {files}")
+            signature = MyFaceNet.predict(face)
+            faceDatabase[nama] = signature
+            
+        mySignature = open("D:\\College\\Semester 8\\Coding\\Data\\signature.pkl", "wb")
+        pickle.dump(faceDatabase, mySignature)
+        mySignature.close()
         
-        
-        
-        cv2.imshow('res', img)
-        k = cv2.waitKey(5) & 0xFF
-        if k == 27:
-            break
-    
-    cv2.destroyAllWindows()
+        with open(mahasiswa_path, "r") as file:
+            data = json.load(file)
+            temp = data["mahasiswa"]
+            y = {"nobp": nobp, "nama": nama, "password": password}
+            temp.append(y)
+            with open(mahasiswa_path, "w") as value:
+                json.dump(data, value, indent=4)
+                print(f"Saving ==> Nobp: {nobp} | Nama: {nama} | Password: {password}")
+            
+        messagebox.showinfo("Smart Attendance", "Data Wajah Berhasil Direkam")
+    else:
+        print("Label sudah ada")
+        messagebox.showerror("Smart Attendance", "Label sudah ada.")
     cap.release()
-    
-    # pose2()
 
 #######################################################################################################################
 # Sub Menu
 def trainingData():
+    global training
     training = Toplevel()
     training.title("Training Data")
     training.iconbitmap("D:/Dev/Python/tkinter/img/ok.ico")
@@ -57,8 +141,8 @@ def trainingData():
     nama = Entry(training, width=40)
     labelpassword = Label(training, text="PASSWORD: ")
     password = Entry(training, width=40)
-    btnOk = Button(training, text="OK", command=pose1)
-    btnCancel = Button(training, text="CANCEL", command=training.destroy)
+    btnOk = Button(training, text="OK", width=10, command=lambda: pose(nobp.get(), nama.get(), password.get()))
+    btnCancel = Button(training, text="CANCEL", width=10, command=training.destroy)
     
     # Grid Configuration for Training Form
     training.columnconfigure(0, weight=1)
