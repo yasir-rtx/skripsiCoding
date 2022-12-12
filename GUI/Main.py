@@ -48,7 +48,7 @@ if not exists(mahasiswa_path):
 # Functions
 def pose(nobp, nama, password):
     # print(f"Nobp : {nobp} | Nama : {nama} | Password : {password}")
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(0)
     label = nobp + "\\"
     labelPath = savePath + label
     print(labelPath)
@@ -103,7 +103,7 @@ def pose(nobp, nama, password):
             face = expand_dims(face, axis=0)
             print(f"Training file : {files}")
             signature = MyFaceNet.predict(face)
-            faceDatabase[nama] = signature
+            faceDatabase[nobp] = signature
             
         mySignature = open("D:\\College\\Semester 8\\Coding\\Data\\signature.pkl", "wb")
         pickle.dump(faceDatabase, mySignature)
@@ -173,6 +173,23 @@ def ambilAbsensi():
     w,h = 400,200
     x,y = int((screenWidth/2) - (w/2)), int((screenHeight/2) - (h/2))
     absensi.geometry(f"{w}x{h}+{x}+{y-50}")
+    
+    labelnobp = Label(absensi, text="NOBP: ")
+    nobp = Entry(absensi, width=40)
+    
+    # Grid Configuration for Ambil Absensi Form
+    absensi.columnconfigure(0, weight=1)
+    absensi.columnconfigure(1, weight=1)
+    absensi.columnconfigure(2, weight=1)
+    absensi.columnconfigure(3, weight=1)
+    absensi.rowconfigure(0, weight=1)
+    absensi.rowconfigure(1, weight=1)
+    absensi.rowconfigure(2, weight=1)
+    absensi.rowconfigure(3, weight=1)
+    
+    # render form
+    labelnobp.grid(row=2, column=1, sticky='E')
+    nobp.grid(row=2, column=2, columnspan=3)
 
 def rekapAbsensi():
     rekap = Toplevel()

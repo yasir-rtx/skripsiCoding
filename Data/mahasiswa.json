@@ -1,0 +1,19 @@
+{
+    "mahasiswa": [
+        {
+            "nobp": "nobp",
+            "nama": "nama",
+            "password": "password"
+        },
+        {
+            "nobp": "18101152630069",
+            "nama": "Muhammad Yasir",
+            "password": "12345"
+        },
+        {
+            "nobp": "18101152630043",
+            "nama": "Gifra Rasyidah",
+            "password": "12345"
+        }
+    ]
+}
