@@ -1,19 +1,23 @@
 {
-    "mahasiswa": [
-        {
-            "nobp": "nobp",
-            "nama": "nama",
-            "password": "password"
-        },
+    "18101152630069": [
         {
             "nobp": "18101152630069",
             "nama": "Muhammad Yasir",
             "password": "12345"
-        },
+        }
+    ],
+    "18101152630000": [
         {
-            "nobp": "18101152630043",
-            "nama": "Gifra Rasyidah",
-            "password": "12345"
+            "nobp": "18101152630000",
+            "nama": "Yelf Van Liechanstain",
+            "password": "00000"
+        }
+    ],
+    "18101152630001": [
+        {
+            "nobp": "18101152630001",
+            "nama": "Zacht Wilhelm Stervan",
+            "password": "00000"
         }
     ]
 }
