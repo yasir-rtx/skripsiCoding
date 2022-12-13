@@ -7,15 +7,17 @@ from numpy import round
 from numpy import where
 from numpy import sum
 from numpy import amax
+from numpy import linalg
 from numpy import savez_compressed
 from os import listdir, mkdir
 from os.path import isdir, exists
+from datetime import datetime
 import cv2
 import pickle
 import numpy as np
 import cv2
 import json
-import shutil
+import time
 
 from tkinter import *
 from tkinter import messagebox
@@ -39,16 +41,37 @@ else:
     
 mahasiswa_path = "D:\\College\\Semester 8\\Coding\\Data\\mahasiswa.json"
 if not exists(mahasiswa_path):
-    data = {"mahasiswa":[{"nobp": "nobp", "nama": "nama", "password": "password"}]}
+    data = {}
     with open(mahasiswa_path, "w") as mahasiswa:
         json.dump(data, mahasiswa, indent=4)
         print("File mahasiswa.json is creasted")
+        
+absensi_path = "D:\\College\\Semester 8\\Coding\\Data\\absensi.json"
+if not exists(absensi_path):
+    data = {}
+    with open(absensi_path, "w") as absensi:
+        json.dump(data, absensi, indent=4)
+        print("File absensi is created")
+        
+# Mengambil tanggal saat ini
+x = datetime.now()
+dates = str(x.day) + "/" + str(x.month) + "/" + str(x.year)
+
+# # Debug proses pengisian absensi
+# x = datetime.now()
+# date = str(x.day) + "/" + str(x.month) + "/" + str(x.year)
+# times = str(x.hour) + "/" + str(x.minute) + "/" + str(x.second)
+# if exists(absensi_path):
+#     data = {date:[{"date": date, "time": times, "nobp": "nobp", "nama": "nama", "ket": "ket"}]}
+#     with open(absensi_path, "w") as absensi:
+#         json.dump(data, absensi, indent=4)
+#         print("test absen berhasil")
 #########################################################################################################################
 
 # Functions
 def pose(nobp, nama, password):
     # print(f"Nobp : {nobp} | Nama : {nama} | Password : {password}")
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
     label = nobp + "\\"
     labelPath = savePath + label
     print(labelPath)
@@ -111,18 +134,86 @@ def pose(nobp, nama, password):
         
         with open(mahasiswa_path, "r") as file:
             data = json.load(file)
-            temp = data["mahasiswa"]
-            y = {"nobp": nobp, "nama": nama, "password": password}
-            temp.append(y)
-            with open(mahasiswa_path, "w") as value:
-                json.dump(data, value, indent=4)
-                print(f"Saving ==> Nobp: {nobp} | Nama: {nama} | Password: {password}")
+            
+            data.update({nobp:[{"nobp": nobp, "nama": nama, "password": password}]})
+            json.dump(data, open(mahasiswa_path, "w"), indent=4)
             
         messagebox.showinfo("Smart Attendance", "Data Wajah Berhasil Direkam")
     else:
         print("Label sudah ada")
         messagebox.showerror("Smart Attendance", "Label sudah ada.")
     cap.release()
+
+def absen(nobp):
+    signatureBase = faceDatabase
+    status = 0
+    for key, value in signatureBase.items():
+        if key == nobp:
+            status = 1
+            
+            # cap = cv2.VideoCapture(0)
+            cap = cv2.VideoCapture(1)
+            t=1
+            while t:
+                time.sleep(0)
+                _, imgVideo = cap.read()
+                FaceDetect = HaarCascade.detectMultiScale(imgVideo, 1.3, 10)
+                
+                for (x1, y1, width, height) in FaceDetect:
+                    x1, y1 = abs(x1), abs(y1)
+                    x2, y2 = x1 + width, y1 + height
+                    
+                    img = cv2.cvtColor(imgVideo, cv2.COLOR_BGR2RGB)
+                    img = fromarray(img)
+                    img_array = asarray(img)
+                    
+                    face = img_array[y1:y2, x1:x2]
+                    
+                    face = fromarray(face)
+                    face = face.resize((160,160))
+                    wajah = face
+                    face = asarray(face)
+                    
+                    face = face.astype('float32')
+                    mean, std = face.mean(), face.std()
+                    face = (face - mean) / std
+                    
+                    face = expand_dims(face, axis=0)
+                    signature = MyFaceNet.predict(face)
+                    
+                    distance = linalg.norm(value - signature)
+                    if (distance > 7):
+                        identity = "Unknown"
+                        cv2.rectangle(imgVideo, (x1,y1), (x2,y2), (0,0,255), 2)
+                        cv2.rectangle(imgVideo, (x1,y1-40), (x2,y1), (0,0,255), -2)
+                        cv2.putText(imgVideo, identity, (x1,y1-10), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 1, cv2.LINE_AA)
+                    else:
+                        identity = key
+                        cv2.rectangle(imgVideo, (x1,y1), (x2,y2), (0,255,0), 2)
+                        cv2.rectangle(imgVideo, (x1,y1-40), (x2,y1), (0,255,0), -2)
+                        cv2.putText(imgVideo, identity + ", " + str(round(distance, 2)), (x1,y1-10), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 1, cv2.LINE_AA)
+                        
+                cv2.imshow('Face Recognition', imgVideo)   
+        
+                k = cv2.waitKey(5) & 0xFF
+                if k == 27:
+                    t-=1
+            cv2.destroyAllWindows()
+            cap.release()
+            
+    if status != 1:
+        messagebox.showwarning("Rekam Absensi", "Data anda tidak ditemukan.\nSilahkan lakukan training wajah terlebih dahulu")
+        
+    if identity == "Unknown":
+        messagebox.showwarning("Rekam Absensi", "Wajah tidak cocok. Silahkan isi password jika nobp identitas anda benar")
+    else:
+        times = str(x.hour) + ":" + str(x.minute) + ":" + str(x.sec)
+        with open(absensi_path, "r") as absensi:
+            data = json.load()
+            temp = data[dates]
+            y = {dates:[{"date": dates, "time": times, "nobp": nobp, "nama": "nama", "ket": "ket"}]}
+        messagebox.showinfo("Rekam Absensi", "Absensi anda untuk hari ini berhasil direkam")
+
 
 #######################################################################################################################
 # Sub Menu
@@ -170,12 +261,14 @@ def ambilAbsensi():
     absensi = Toplevel()
     absensi.title("Ambil Absensi")
     absensi.iconbitmap("D:/Dev/Python/tkinter/img/ok.ico")
-    w,h = 400,200
+    w,h = 400,100
     x,y = int((screenWidth/2) - (w/2)), int((screenHeight/2) - (h/2))
     absensi.geometry(f"{w}x{h}+{x}+{y-50}")
     
     labelnobp = Label(absensi, text="NOBP: ")
     nobp = Entry(absensi, width=40)
+    btnOk = Button(absensi, text="OK", width=10, command=lambda: absen(nobp.get()))
+    btnCancel = Button(absensi, text="CANCEL", width=10, command=absensi.destroy)
     
     # Grid Configuration for Ambil Absensi Form
     absensi.columnconfigure(0, weight=1)
@@ -188,8 +281,10 @@ def ambilAbsensi():
     absensi.rowconfigure(3, weight=1)
     
     # render form
-    labelnobp.grid(row=2, column=1, sticky='E')
-    nobp.grid(row=2, column=2, columnspan=3)
+    labelnobp.grid(row=1, column=1, sticky='E')
+    nobp.grid(row=1, column=2, columnspan=3)
+    btnOk.grid(row=2, column=1, columnspan=2)
+    btnCancel.grid(row=2, column=2, columnspan=2)
 
 def rekapAbsensi():
     rekap = Toplevel()
