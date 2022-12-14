@@ -41,13 +41,13 @@ def generateListMahasiswa(date):
             print(f"Generate Mahasiswa Key for {nobp}")
             with open(absensi_path, "r") as absensi:
                 # Generate mahasiswa value into date object in absensi.json
-                y = {nobp:[{
+                y = {nobp:{
                     "nobp": nobp,
                     "nama": value[0]["nama"],
                     "date": date,
                     "time": "-",
                     "ket": "Tidak Hadir"
-                }]}
+                }}
                 data = json.load(absensi)
                 # metode dump
                 temp = data[date]   # akses object hari ini
