@@ -84,6 +84,56 @@ def generateListMahasiswa(date):
     print("Mahasiswa Key is generated\n")
 ########################################################################
 
+
+# Nobp check
+def cekNobp(nobp):
+    y = datetime.now()
+    dates = str(y.day) + "/" + str(y.month) + "/" + str(y.year)
+    with open(absensi_path, "r") as absensi:
+        data = json.load(absensi)
+        temp = data[dates]
+        status = 0
+        for mahasiswa in temp:
+            for key, value in mahasiswa.items():
+                if key == nobp:
+                    status = 1
+        # print(status)   # Jika status = 0, artinya nobp belum ada di dalam absensi.json
+        return status
+    
+# Generate new nobp in absensi.json
+def generateNewNobp(nobp):
+    y = datetime.now()
+    dates = str(y.day) + "/" + str(y.month) + "/" + str(y.year)
+    with open(absensi_path, "r") as absensi:
+        data = json.load(absensi)
+        temp = data[dates]
+        
+            
+        newData = []
+        for y in temp:
+            newData.append(y)
+        
+        # print(newData)
+        
+        with open(mahasiswa_path, "r") as mahasiswa:
+            entry = json.load(mahasiswa)
+            value = entry[nobp][0]
+        
+        newData.append(
+            {
+                nobp:{
+                    "nobp": value["nobp"],
+                    "nama": value["nama"],
+                    "date": dates,
+                    "time": "-",
+                    "ket": "Tidak Hadir"
+        }})
+        
+    # print(newData)
+    data.update({dates:newData})
+    # print(data)
+    json.dump(data, open(absensi_path, "w"), indent=4)
+
 # Take face images and generate signature
 def pose(nobp, nama, password):
     # print(f"Nobp : {nobp} | Nama : {nama} | Password : {password}")
@@ -147,6 +197,7 @@ def pose(nobp, nama, password):
         mySignature = open("D:\\College\\Semester 8\\Coding\\Data\\signature.pkl", "wb")
         pickle.dump(faceDatabase, mySignature)
         mySignature.close()
+        print("Face signature is created\n")
         
         with open(mahasiswa_path, "r") as file:
             data = json.load(file)
@@ -154,6 +205,10 @@ def pose(nobp, nama, password):
             data.update({nobp:[{"nobp": nobp, "nama": nama, "password": password}]})
             json.dump(data, open(mahasiswa_path, "w"), indent=4)
             
+        # Insert new mahasiswa into absensi.json
+        if not cekNobp(nobp):
+            generateNewNobp(nobp)
+        
         messagebox.showinfo("Smart Attendance", "Data Wajah Berhasil Direkam")
     else:
         print("Label sudah ada")
@@ -163,8 +218,9 @@ def pose(nobp, nama, password):
     
 # Take Attendance
 def takeAttendance(nobp):
-    dates="14/12/2022"    # debug fungsi untuk memastikan perubahan hanya terjadi di hari itu
+    # dates="14/12/2022"    # debug fungsi untuk memastikan perubahan hanya terjadi di hari itu
     y = datetime.now()
+    dates = str(y.day) + "/" + str(y.month) + "/" + str(y.year)
     times = str(y.hour) + ":" + str(y.minute) + ":" + str(y.second)
     with open(absensi_path, "r") as absensi:
         data = json.load(absensi)
@@ -209,6 +265,7 @@ def preAbsen():
 
 # Ambil Absensi
 def absen(nobp):
+    absensiForm.destroy()
     signatureBase = faceDatabase
     status = 0
     for key, value in signatureBase.items():
@@ -258,7 +315,11 @@ def absen(nobp):
                         cv2.putText(imgVideo, identity + ", " + str(round(distance, 2)), (x1,y1-10), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 1, cv2.LINE_AA)
                         
                 cv2.imshow('Face Recognition', imgVideo)   
-        
+                
+                # # Jika ingin proses verifikasi berjalan otomatis
+                # time.sleep(5)
+                # break
+                # Menampilkan proses verifiaksi di kamera
                 k = cv2.waitKey(5) & 0xFF
                 if k == 27:
                     t-=1
@@ -324,8 +385,8 @@ absensi_path = "D:\\College\\Semester 8\\Coding\\Data\\absensi.json"
 # Prepare absensi.json
 if not exists(absensi_path):                                    # create absensi.json
     generateAbsensiFile({})
-    # generateKeyDate(date)
-    # generateListMahasiswa(date)
+    generateKeyDate(date)
+    generateListMahasiswa(date)
 else:                                                           # if absensi.json has been created
     # check if date object is already made or not
     finding = 0
@@ -387,27 +448,28 @@ def trainingData():
 
 # Sub Menu 2
 def ambilAbsensi():
-    absensi = Toplevel()
-    absensi.title("Ambil Absensi")
-    absensi.iconbitmap("D:/Dev/Python/tkinter/img/ok.ico")
+    global absensiForm
+    absensiForm = Toplevel()
+    absensiForm.title("Ambil Absensi")
+    absensiForm.iconbitmap("D:/Dev/Python/tkinter/img/ok.ico")
     w,h = 400,100
     x,y = int((screenWidth/2) - (w/2)), int((screenHeight/2) - (h/2))
-    absensi.geometry(f"{w}x{h}+{x}+{y-50}")
+    absensiForm.geometry(f"{w}x{h}+{x}+{y-50}")
     
-    labelnobp = Label(absensi, text="NOBP: ")
-    nobp = Entry(absensi, width=40)
-    btnOk = Button(absensi, text="OK", width=10, command=lambda: absen(nobp.get()))
-    btnCancel = Button(absensi, text="CANCEL", width=10, command=absensi.destroy)
+    labelnobp = Label(absensiForm, text="NOBP: ")
+    nobp = Entry(absensiForm, width=40)
+    btnOk = Button(absensiForm, text="OK", width=10, command=lambda: absen(nobp.get()))
+    btnCancel = Button(absensiForm, text="CANCEL", width=10, command=absensiForm.destroy)
     
     # Grid Configuration for Ambil Absensi Form
-    absensi.columnconfigure(0, weight=1)
-    absensi.columnconfigure(1, weight=1)
-    absensi.columnconfigure(2, weight=1)
-    absensi.columnconfigure(3, weight=1)
-    absensi.rowconfigure(0, weight=1)
-    absensi.rowconfigure(1, weight=1)
-    absensi.rowconfigure(2, weight=1)
-    absensi.rowconfigure(3, weight=1)
+    absensiForm.columnconfigure(0, weight=1)
+    absensiForm.columnconfigure(1, weight=1)
+    absensiForm.columnconfigure(2, weight=1)
+    absensiForm.columnconfigure(3, weight=1)
+    absensiForm.rowconfigure(0, weight=1)
+    absensiForm.rowconfigure(1, weight=1)
+    absensiForm.rowconfigure(2, weight=1)
+    absensiForm.rowconfigure(3, weight=1)
     
     # render form
     labelnobp.grid(row=1, column=1, sticky='E')
