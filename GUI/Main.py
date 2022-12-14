@@ -14,7 +14,7 @@ from os.path import isdir, exists
 from datetime import datetime
 import cv2
 import pickle
-import numpy as np
+# import numpy as np
 import cv2
 import json
 import time
@@ -155,7 +155,7 @@ def absen(nobp):
             cap = cv2.VideoCapture(1)
             t=1
             while t:
-                time.sleep(0)
+                # time.sleep(0)
                 _, imgVideo = cap.read()
                 FaceDetect = HaarCascade.detectMultiScale(imgVideo, 1.3, 10)
                 
@@ -207,11 +207,11 @@ def absen(nobp):
     if identity == "Unknown":
         messagebox.showwarning("Rekam Absensi", "Wajah tidak cocok. Silahkan isi password jika nobp identitas anda benar")
     else:
-        times = str(x.hour) + ":" + str(x.minute) + ":" + str(x.sec)
-        with open(absensi_path, "r") as absensi:
-            data = json.load()
-            temp = data[dates]
-            y = {dates:[{"date": dates, "time": times, "nobp": nobp, "nama": "nama", "ket": "ket"}]}
+        # times = str(x.hour) + ":" + str(x.minute) + ":" + str(x.sec)
+        # with open(absensi_path, "r") as absensi:
+        #     data = json.load()
+        #     temp = data[dates]
+        #     y = {dates:[{"date": dates, "time": times, "nobp": nobp, "nama": "nama", "ket": "ket"}]}
         messagebox.showinfo("Rekam Absensi", "Absensi anda untuk hari ini berhasil direkam")
 
 
