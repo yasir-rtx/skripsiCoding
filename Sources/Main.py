@@ -87,8 +87,8 @@ def generateListMahasiswa(date):
 # Take face images and generate signature
 def pose(nobp, nama, password):
     # print(f"Nobp : {nobp} | Nama : {nama} | Password : {password}")
-    cap = cv2.VideoCapture(1)
-    label = nobp + "\\"
+    cap = cv2.VideoCapture(0)
+    label = nobp + " - " + nama + "\\"
     labelPath = savePath + label
     print(labelPath)
     if not exists(labelPath):
@@ -163,7 +163,7 @@ def pose(nobp, nama, password):
     
 # Take Attendance
 def takeAttendance(nobp):
-    # dates="14/12/2022"    # debug fungsi untuk memastikan perubahan hanya terjadi di hari itu
+    dates="14/12/2022"    # debug fungsi untuk memastikan perubahan hanya terjadi di hari itu
     y = datetime.now()
     times = str(y.hour) + ":" + str(y.minute) + ":" + str(y.second)
     with open(absensi_path, "r") as absensi:
@@ -196,6 +196,17 @@ def takeAttendance(nobp):
     print(f"{nobp} telah hadir pada {dates}")
 #####################################################################################
 
+# Pre Ambil Absensi
+def preAbsen():
+    with open(mahasiswa_path, "r") as mahasiswa:
+        data = json.load(mahasiswa)
+        # Check mahasiswa.json is empty
+        if data == {}:
+            messagebox.showwarning("Ambil Absensi", "Absensi Tidak dapat dilakukan.\n\nCause    : Tidak data wajah yang tersimpan.\nSolution: Lakukan Training Wajah terlebih dahulu.")
+        else:
+            # messagebox.showinfo("Ambil Absensi", "Ambil absensi dapat dilakukan")
+            ambilAbsensi()
+
 # Ambil Absensi
 def absen(nobp):
     signatureBase = faceDatabase
@@ -204,8 +215,8 @@ def absen(nobp):
         if key == nobp:
             status = 1
             
-            # cap = cv2.VideoCapture(0)
-            cap = cv2.VideoCapture(1)
+            cap = cv2.VideoCapture(0)
+            # cap = cv2.VideoCapture(1)
             t=1
             while t:
                 # time.sleep(0)
@@ -302,18 +313,19 @@ else:
 # Mahasiswa.json
 mahasiswa_path = "D:\\College\\Semester 8\\Coding\\Data\\mahasiswa.json"
 if not exists(mahasiswa_path):
+    print("Generate File : mahasiswa.json")
     data = {}
     with open(mahasiswa_path, "w") as mahasiswa:
         json.dump(data, mahasiswa, indent=4)
-        print("File mahasiswa.json is creasted")
+        print("File mahasiswa.json is creasted\n")
         
 # Absensi
 absensi_path = "D:\\College\\Semester 8\\Coding\\Data\\absensi.json"
 # Prepare absensi.json
 if not exists(absensi_path):                                    # create absensi.json
     generateAbsensiFile({})
-    generateKeyDate(date)
-    generateListMahasiswa(date)
+    # generateKeyDate(date)
+    # generateListMahasiswa(date)
 else:                                                           # if absensi.json has been created
     # check if date object is already made or not
     finding = 0
@@ -469,7 +481,7 @@ mainTitle.grid(row=2, column=2)
 
 # Button Frame
 button1 = Button(buttonFrame, text="TRAINING WAJAH", padx=50, pady=25, command=trainingData)
-button2 = Button(buttonFrame, text="AMBIL ABSENSI", padx=50, pady=25, command=ambilAbsensi)
+button2 = Button(buttonFrame, text="AMBIL ABSENSI", padx=50, pady=25, command=preAbsen)
 button3 = Button(buttonFrame, text="REKAP ABSENSI", padx=50, pady=25, command=rekapAbsensi)
 button1.grid(row=0, column=2)
 button2.grid(row=0, column=3)
