@@ -215,9 +215,9 @@ def pose(nobp, nama, password):
         messagebox.showerror("Smart Attendance", "Label sudah ada.")
     cap.release()
 ############################################################################################
-    
+
 # Take Attendance
-def takeAttendance(nobp):
+def takeAttendance(nobp): 
     # dates="14/12/2022"    # debug fungsi untuk memastikan perubahan hanya terjadi di hari itu
     y = datetime.now()
     dates = str(y.day) + "/" + str(y.month) + "/" + str(y.year)
@@ -250,6 +250,7 @@ def takeAttendance(nobp):
     # print(data)
     json.dump(data, open(absensi_path, "w"), indent=4)
     print(f"{nobp} telah hadir pada {dates}")
+    messagebox.showinfo("Rekam Absensi", "Absensi anda untuk hari ini berhasil direkam")
 #####################################################################################
 
 # Pre Ambil Absensi
@@ -263,17 +264,56 @@ def preAbsen():
             # messagebox.showinfo("Ambil Absensi", "Ambil absensi dapat dilakukan")
             ambilAbsensi()
 
+def askPassword():
+    global passForm
+    passForm = Toplevel()
+    passForm.title("Ambil Absensi")
+    passForm.iconbitmap("D:/Dev/Python/tkinter/img/ok.ico")
+    w,h = 400,100
+    x,y = int((screenWidth/2) - (w/2)), int((screenHeight/2) - (h/2))
+    passForm.geometry(f"{w}x{h}+{x}+{y-50}")
+    
+    labelpassword = Label(passForm, text="Password: ")
+    # global passwordForm
+    passwordForm = Entry(passForm, width=40)
+    btnOk = Button(passForm, text="OK", width=10, command=lambda: getPassword(passwordForm.get()))
+    btnCancel = Button(passForm, text="CANCEL", width=10, command=passForm.destroy)
+    
+    # Grid Configuration for Ambil Absensi Form
+    passForm.columnconfigure(0, weight=1)
+    passForm.columnconfigure(1, weight=1)
+    passForm.columnconfigure(2, weight=1)
+    passForm.columnconfigure(3, weight=1)
+    passForm.rowconfigure(0, weight=1)
+    passForm.rowconfigure(1, weight=1)
+    passForm.rowconfigure(2, weight=1)
+    passForm.rowconfigure(3, weight=1)
+    
+    # render form
+    labelpassword.grid(row=1, column=1, sticky='E')
+    passwordForm.grid(row=1, column=2, columnspan=3)
+    btnOk.grid(row=2, column=1, columnspan=2)
+    btnCancel.grid(row=2, column=2, columnspan=2)
+    
+def getPassword():
+    # passForm.destroy()
+    # print(x)
+    askPassword()
+    return x
+
 # Ambil Absensi
 def absen(nobp):
     absensiForm.destroy()
     signatureBase = faceDatabase
     status = 0
+    identity = 0
     for key, value in signatureBase.items():
         if key == nobp:
             status = 1
+            print(f"Signature {nobp} found")
             
-            cap = cv2.VideoCapture(0)
-            # cap = cv2.VideoCapture(1)
+            # cap = cv2.VideoCapture(0)
+            cap = cv2.VideoCapture(1)
             t=1
             while t:
                 # time.sleep(0)
@@ -304,10 +344,9 @@ def absen(nobp):
                     
                     distance = linalg.norm(value - signature)
                     if (distance > 7):
-                        identity = "Unknown"
                         cv2.rectangle(imgVideo, (x1,y1), (x2,y2), (0,0,255), 2)
                         cv2.rectangle(imgVideo, (x1,y1-40), (x2,y1), (0,0,255), -2)
-                        cv2.putText(imgVideo, identity, (x1,y1-10), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 1, cv2.LINE_AA)
+                        cv2.putText(imgVideo, "Unknown", (x1,y1-10), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 1, cv2.LINE_AA)
                     else:
                         identity = key
                         cv2.rectangle(imgVideo, (x1,y1), (x2,y2), (0,255,0), 2)
@@ -325,21 +364,64 @@ def absen(nobp):
                     t-=1
             cv2.destroyAllWindows()
             cap.release()
-            
-    if status != 1:
-        messagebox.showwarning("Rekam Absensi", "Data anda tidak ditemukan.\nSilahkan lakukan training wajah terlebih dahulu")
         
-    if identity == "Unknown":
-        messagebox.showwarning("Rekam Absensi", "Wajah tidak cocok. Silahkan isi password jika nobp identitas anda benar")
+    if status != 1:
+        messagebox.showwarning("Rekam Absensi", "Data anda tidak ditemukan.\n Periksa nobp!")        
     else:
-        # check if absensi.json and mahasiswa.json is ready
-        if absensi_path:
-            print("absensi.json is ready")
-        if mahasiswa_path:
-            print("mahasiswa.json is ready")
+        if identity == 0:
+            messagebox.showwarning("Rekam Absensi", "Wajah tidak cocok. Silahkan isi password jika nobp identitas anda benar")
+            def askPassword():
+                global formPassword
+                formPassword = Toplevel()
+                formPassword.title("Ambil Password")
+                formPassword.iconbitmap("D:/Dev/Python/tkinter/img/ok.ico")
+                w,h = 400,100
+                x,y = int((screenWidth/2) - (w/2)), int((screenHeight/2) - (h/2))
+                formPassword.geometry(f"{w}x{h}+{x}+{y-50}")
+                label = Label(formPassword, text="Password: ")
+                label.pack()
+                passw = Entry(formPassword, width=40)
+                passw.pack()
+                btnOk = Button(formPassword, text="OK", width=10, command=lambda: getPassword(passw.get()))
+                btnCancel = Button(formPassword, text="CANCEL", width=10, command=formPassword.destroy)
+                btnOk.pack()
+                btnCancel.pack()
             
-        takeAttendance(nobp)
-        messagebox.showinfo("Rekam Absensi", "Absensi anda untuk hari ini berhasil direkam")
+            def getPassword(passwordAsk):
+                formPassword.destroy()
+                # print(f"Password Input : {passwordAsk}")
+            
+                # Ambil password dari mahasiswa.json
+                with open(mahasiswa_path, "r") as mahasiswa:
+                    data = json.load(mahasiswa)
+                    temp = data[nobp]
+                    passwordMhs =  temp[0]["password"]
+                    print(f"Password Asli : {passwordMhs}")
+                
+                if passwordAsk != "":
+                    print(f"Password Input : {passwordAsk}")
+                    if passwordAsk == passwordMhs:
+                        takeAttendance(nobp)
+                        # print("password cocok")
+                    else:
+                        messagebox.showerror("Ambil Absensi", "Password Salah")
+                        askPassword()
+                else:
+                    # print("Password is empty")
+                    messagebox.showerror("Ambil Absensi", "Password Kosong")
+                    askPassword()
+                
+            
+            askPassword()
+            
+            
+        else:
+            # check if absensi.json and mahasiswa.json is ready
+            if absensi_path:
+                print("absensi.json is ready")
+            if mahasiswa_path:
+                print("mahasiswa.json is ready")
+            takeAttendance(nobp)
 ###################################################################################################################################################################
 
 
