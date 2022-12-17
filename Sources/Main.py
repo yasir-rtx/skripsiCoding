@@ -31,7 +31,7 @@ import time
 # GUI
 from tkinter import *
 from tkinter import messagebox
-
+from tkinter import ttk
 
 
 ###############################################################################################################################
@@ -145,8 +145,8 @@ def pose(nobp, nama, password):
         training.destroy()
         mkdir(labelPath)
         for i in range(3):
-            desc = "front" if i==0 else "side" if i==1 else "glass"
-            messagebox.showinfo(f"Pose {i}", f"Deskripsi Pose {desc}")
+            desc = "front" if i==0 else "side" if i==1 else "tambahan"
+            messagebox.showinfo(f"Tahap {i}", f"Deskripsi Pose {desc}")
             sum = 0
             while 1:
                 key = cv2.waitKey(5) & 0xFF
@@ -422,6 +422,25 @@ def absen(nobp):
             if mahasiswa_path:
                 print("mahasiswa.json is ready")
             takeAttendance(nobp)
+            
+# Show record of "rekap absensi"
+def insertTreeview(newDate):
+    date = newDate
+    # Delete treeviw/table
+    for record in table.get_children():
+        # print(record)
+        table.delete(record)
+
+    # update treeview/table
+    with open(absensi_path, "r") as file:
+        absensi = json.load(file)
+        data = absensi[date]
+        for i, mahasiswa in enumerate(data):
+            for key, value in mahasiswa.items():
+                if i % 2 == 0:
+                    table.insert(parent="", index="end", iid=i, text="", values=(i+1, value["nobp"], value["nama"], value["date"], value["time"], value["ket"]), tags="even")
+                else:
+                    table.insert(parent="", index="end", iid=i, text="", values=(i+1, value["nobp"], value["nama"], value["date"], value["time"], value["ket"]), tags="odd")
 ###################################################################################################################################################################
 
 
@@ -561,12 +580,91 @@ def ambilAbsensi():
 
 # Sub menu 3
 def rekapAbsensi():
-    rekap = Toplevel()
+    rekap = Toplevel(window)
     rekap.title("Rekap Absensi")
     rekap.iconbitmap("D:/Dev/Python/tkinter/img/ok.ico")
     w,h = 700,800
     x,y = int((screenWidth/2) - (w/2)), int((screenHeight/2) - (h/2))
+    rekap.minsize(700,800)
     rekap.geometry(f"{w}x{h}+{x+500}+{y}")
+    rekap.resizable(0,0)
+    
+    style = ttk.Style()
+    
+    style.configure("Treeview",
+        # background="silver",
+        foreground="black",
+        rowheight=30
+    )
+    
+    style.map("Treeview", background=[("selected", "black")])
+    
+    # Grid Formate
+    rekap.columnconfigure(0, weight=10)
+    rekap.columnconfigure(1, weight=10)
+    rekap.columnconfigure(2, weight=1)
+    rekap.columnconfigure(3, weight=1)
+    rekap.columnconfigure(4, weight=1)
+    
+    # Judul
+    maintitle = Label(rekap, text="REKAP ABSENSI", font=('Times New Roman',30,'bold'))
+    maintitle.grid(row=0, column=0, columnspan=5, pady=25)
+    # Label Tanggal
+    dateLabel = Label(rekap, text="DATE: ")
+    dateLabel.grid(row=1, column=2, pady=10, sticky="E")
+    # Entry Tanggal
+    dateEntry = Entry(rekap, width=10)
+    dateEntry.grid(row=1, column=3, pady=10, sticky="WE")
+    dateEntry.insert(0, date)
+    # Tombol Pencarian
+    search = Button(rekap, text="show", command=lambda:insertTreeview(dateEntry.get()))
+    search.grid(row=1, column=4, pady=10, sticky="W", padx=5)
+    
+    tableFrame = LabelFrame(rekap)
+    tableFrame.grid(padx=20, row=2, column=0, columnspan=5, sticky="WENS")
+    
+    # Define table
+    global table
+    table = ttk.Treeview(tableFrame, height=20)
+    
+    # Define columns
+    table['columns'] = ("no", "nobp", "nama", "date", "hour", "ket")
+    
+    table.tag_configure("odd", background="white")
+    table.tag_configure("even", background="silver")
+    
+    # formate columns
+    table.column("#0", width=0, stretch=NO)
+    table.column("no", anchor=CENTER, width=30, minwidth=30)
+    table.column("nobp", anchor=W, width=100, minwidth=100)
+    table.column("nama", anchor=W, width=190, minwidth=190)
+    table.column("date", anchor=CENTER, width=100, minwidth=100)
+    table.column("hour", anchor=CENTER, width=100, minwidth=100)
+    table.column("ket", width=120, minwidth=120)
+    
+    # create headings
+    table.heading("#0", anchor=W)
+    table.heading("no", text="NO", anchor=CENTER)
+    table.heading("nobp", text="NOBP", anchor=W)
+    table.heading("nama", text="Nama", anchor=W)
+    table.heading("date", text="Tanggal", anchor=CENTER)
+    table.heading("hour", text="Jam", anchor=CENTER)
+    table.heading("ket", text="Keterangan", anchor=W)
+    
+    # Add Data
+    # table.insert(parent='', index="end", iid=0, text="", values=("18101152630069", "Muhamamd Yasir", "15/12/200", "14:25", "Tidak Hadir"))    # parent
+    # table.insert(parent='0', index="end", iid=1, text="", values=("18101152630069", "Muhamamd Yasir", "15/12/200", "14:25", "Tidak Hadir"))  # chiild
+    insertTreeview(date)
+    
+    # Pack to screen
+    # table.grid(padx=20, row=2, column=0, columnspan=5)
+    table.pack(side=LEFT, expand=1)
+    
+    scrollbar = ttk.Scrollbar(tableFrame, orient=VERTICAL, command=table.yview)
+    table.configure(yscrollcommand=scrollbar.set)
+    # scrollbar.grid(row=0, column=1, sticky="NS")
+    # scrollbar.pack(side=RIGHT, fill=Y)
+    scrollbar.pack(side=RIGHT, fill=Y)
     
 # Main menu
 window = Tk()
