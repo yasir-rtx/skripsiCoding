@@ -35,51 +35,47 @@ from tkinter import messagebox
 # Take face images and generate signature
 def pose(nobp, nama, password):
     # print(f"Nobp : {nobp} | Nama : {nama} | Password : {password}")
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(2)
     label = nobp + " - " + nama + "\\"
     labelPath = savePath + label
     print(labelPath)
-    if not exists(labelPath):
-        training.destroy()
-        mkdir(labelPath)
-        for i in range(1):
-            desc = "test"
-            messagebox.showinfo(f"Pose {i}", f"Deskripsi Pose {desc}")
-            sum = 0
-            while 1:
-                key = cv2.waitKey(5) & 0xFF
-                _, imgVideo = cap.read()
-                FaceDetect = HaarCascade.detectMultiScale(imgVideo, 1.3, 5)
-                if len(FaceDetect) > 0:
-                    x1, y1, w, h = FaceDetect[0]
-                else :
-                    x1, y1, w, h = 1,1,10,10
-                x1, y1 = abs(x1), abs(y1)
-                x2, y2 = x1+w, y1+h
-                img = cv2.cvtColor(imgVideo, cv2.COLOR_BGR2RGB)
-                img = fromarray(img)
-                img_array = asarray(img)
-                face = img_array[y1:y2, x1:x2]
-                face = fromarray(face)
-                face_save = face.resize((160,160))
-                face = asarray(face_save)
-                if key == 13:
-                    fileName = labelPath + nama + "_" + desc + "_" + str(sum) + ".jpg"
-                    print(f"saving : {fileName}")
-                    face_save.save(fileName)
-                    sum+=1
-                cv2.rectangle(imgVideo, (x1,y1), (x2,y2), (0,255,0), 2)
-                cv2.imshow('Rekam Wajah', imgVideo)
-                if sum == 10:
-                    break
-                if key == 27:
-                    break
-            cv2.destroyAllWindows()
-        
-        messagebox.showinfo("Smart Attendance", "Data Wajah Berhasil Direkam")
-    else:
-        print("Label sudah ada")
-        messagebox.showerror("Smart Attendance", "Label sudah ada.")
+    training.destroy()
+    mkdir(labelPath)
+    for i in range(1):
+        desc = "test"
+        messagebox.showinfo(f"Pose {i}", f"Deskripsi Pose {desc}")
+        sum = 0
+        while 1:
+            key = cv2.waitKey(5) & 0xFF
+            _, imgVideo = cap.read()
+            FaceDetect = HaarCascade.detectMultiScale(imgVideo, 1.3, 5)
+            if len(FaceDetect) > 0:
+                x1, y1, w, h = FaceDetect[0]
+            else :
+                x1, y1, w, h = 1,1,10,10
+            x1, y1 = abs(x1), abs(y1)
+            x2, y2 = x1+w, y1+h
+            img = cv2.cvtColor(imgVideo, cv2.COLOR_BGR2RGB)
+            img = fromarray(img)
+            img_array = asarray(img)
+            face = img_array[y1:y2, x1:x2]
+            face = fromarray(face)
+            face_save = face.resize((160,160))
+            face = asarray(face_save)
+            if key == 13:
+                fileName = labelPath + nama + "_" + desc + "_" + str(sum) + ".jpg"
+                print(f"saving : {fileName}")
+                face_save.save(fileName)
+                sum+=1
+            cv2.rectangle(imgVideo, (x1,y1), (x2,y2), (0,255,0), 2)
+            cv2.imshow('Rekam Wajah', imgVideo)
+            if sum == 10:
+                break
+            if key == 27:
+                break
+        cv2.destroyAllWindows()
+    
+    messagebox.showinfo("Smart Attendance", "Data Wajah Berhasil Direkam")
     cap.release()
     
 ###############################################################################################################################

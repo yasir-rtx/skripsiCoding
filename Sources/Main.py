@@ -137,7 +137,7 @@ def generateNewNobp(nobp):
 # Take face images and generate signature
 def pose(nobp, nama, password):
     # print(f"Nobp : {nobp} | Nama : {nama} | Password : {password}")
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(2)
     label = nobp + " - " + nama + "\\"
     labelPath = savePath + label
     print(labelPath)
@@ -312,8 +312,8 @@ def absen(nobp):
             status = 1
             print(f"Signature {nobp} found")
             
-            # cap = cv2.VideoCapture(0)
-            cap = cv2.VideoCapture(1)
+            cap = cv2.VideoCapture(2)
+            # cap = cv2.VideoCapture(2)
             t=1
             while t:
                 # time.sleep(0)
