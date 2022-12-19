@@ -26,5 +26,47 @@
             "nama": "Nasrullah",
             "password": "12345"
         }
+    ],
+    "18101152630004": [
+        {
+            "nobp": "18101152630004",
+            "nama": "Rizka Fauziah Hanum",
+            "password": "12345"
+        }
+    ],
+    "18101152630079": [
+        {
+            "nobp": "18101152630079",
+            "nama": "Rafi Andriawan",
+            "password": "12345"
+        }
+    ],
+    "20101152630081": [
+        {
+            "nobp": "20101152630081",
+            "nama": "Rayhan Andriawan",
+            "password": "12345"
+        }
+    ],
+    "19101152630019": [
+        {
+            "nobp": "19101152630019",
+            "nama": "Ilham Yani Putra",
+            "password": "12345"
+        }
+    ],
+    "18101152630003": [
+        {
+            "nobp": "18101152630003",
+            "nama": "Rahmat Denis ",
+            "password": "12345"
+        }
+    ],
+    "19101152630033": [
+        {
+            "nobp": "19101152630033",
+            "nama": "Gifra Rasyidah",
+            "password": "12345"
+        }
     ]
 }
