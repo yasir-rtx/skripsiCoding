@@ -332,7 +332,6 @@ def absen(nobp):
                     
                     face = fromarray(face)
                     face = face.resize((160,160))
-                    wajah = face
                     face = asarray(face)
                     
                     face = face.astype('float32')
